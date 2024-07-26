@@ -25,7 +25,24 @@ def partner_update(user_id:int, partner_name: str, partner_id: int):
     connection.commit()
     
 #------------------#PETS DATABASE#------------------#------------------
-def info_pet(username: str):
-    cursor.execute('SELECT * FROM users WHERE username == ?', (username,))
+def info_pet(owner: str):
+    cursor.execute('SELECT * FROM pets WHERE owner1 = ?', (owner,))
     result = cursor.fetchone()
+    if result is None:
+        cursor.execute('SELECT * FROM pets WHERE owner2 = ?', (owner,))
+        result = cursor.fetchone()
     return result
+
+
+def pet_update(owner1: str, owner2: str, pet: str):
+    cursor.execute('INSERT INTO pets (owner1, owner2, pet) VALUES (?, ?, ?)', (owner1, owner2, pet))
+    connection.commit()
+    
+def update_petname(owner: str, petname: str):
+    try:
+        cursor.execute('UPDATE pets SET pet_name = ? WHERE owner1 = ?', (petname, owner))
+        connection.commit()
+    except:
+        cursor.execute('UPDATE pets SET pet_name = ? WHERE owner2 = ?', (petname, owner))
+        connection.commit()
+        
