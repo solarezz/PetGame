@@ -48,15 +48,44 @@ def callback_handler(call):
         profile_function(call.message)
     elif call.data == 'partner':
         if db.info(call.message.chat.id)[3] != "None":
-            bot.send_message(call.message.chat.id, f"Информация по партнёру:\nВаш партнёр: {db.info(call.message.chat.id)[3]} ")
+            markup = types.InlineKeyboardMarkup()
+            button_partner = types.InlineKeyboardButton('💔 Расстаться', callback_data='breake')
+            button_pet = types.InlineKeyboardButton('🐾 Наш питомец', callback_data='pet')
+            markup.row(button_partner, button_pet)
+            bot.send_message(call.message.chat.id, f"📌 Информация по партнёру:\n❤️ Ваш партнёр: @{db.info(call.message.chat.id)[2]}", reply_markup=markup)
         else:
             bot.send_message(call.message.chat.id, "⌨️ Введите [ID] пользователя(его можно узнать в профиле): ")
+    elif call.data == 'breake':
+        bot.send_message(call.message.chat.id, "💔 Вы расстались с партнёром.")
+        bot.send_message(db.info(call.message.chat.id)[3], "💔 Ваш партнёр решил расстаться.")
+        #user_id: int, partner_name: str, partner_id: int
+        db.partner_update(db.info(call.message.chat.id)[3], "Партнёра нет", "None")
+        db.partner_update(call.message.chat.id, "Партнёра нет", "None")
+        db.delete_pet(db.info(call.message.chat.id)[1])
     elif call.data == 'pet':
-        if db.info(call.message.chat.id)[3] == "None":
-            bot.send_message(call.message.chat.id, "❌ У вас нет партнёра!")
-        elif db.info_pet(db.info(call.message.chat.id)[1])[3] != "Питомец не выбран":
-            bot.send_message(call.message.chat.id, '❌ У вас уже есть питомец!')
-        else:
+        try:
+            if db.info(call.message.chat.id)[3] == "None":
+                bot.send_message(call.message.chat.id, "❌ У вас нет партнёра!")
+            elif db.info_pet(db.info(call.message.chat.id)[1])[3] != "Питомец не выбран":
+                health_status = "Отлично себя чувствует" if db.info_pet(db.info(call.message.chat.id)[1])[5] > 70 else "Плохо" if \
+                db.info_pet(db.info(call.message.chat.id)[1])[5] <= 30 else "Нормально"
+                eat_status = "Не голоден" if db.info_pet(db.info(call.message.chat.id)[1])[6] == 100 else "Голоден" if \
+                db.info_pet(db.info(call.message.chat.id)[1])[6] <= 30 else "Нормально"
+                water_status = "Не хочет пить" if db.info_pet(db.info(call.message.chat.id)[1])[7] == 100 else "Хочет пить" if \
+                db.info_pet(db.info(call.message.chat.id)[1])[7] <= 30 else "Нормально"
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=
+                '╭────»»❀❀❀»»\n'\
+                '| 📌 Информация по питомцу:\n' \
+                f'| 🐾 Питомец - {db.info_pet(db.info(call.message.chat.id)[1])[3]}\n' \
+                f'| 📸 Имя питомца - {db.info_pet(db.info(call.message.chat.id)[1])[4]}\n' \
+                f'| 🌍 Месторасположение - {db.info_pet(db.info(call.message.chat.id)[1])[2]}\n' \
+                f'| 🩺 Здоровье -  {health_status}\n' \
+                f'| 🍽️ Еда - {eat_status}\n' \
+                f'| 💦 Вода - {water_status}\n' \
+                '╰────»»❀❀❀»»')
+            else:
+                choice_pet(call.message)
+        except TypeError:
             choice_pet(call.message)
     elif call.data == 'yes_partner':
         profile_partner(call.message)
@@ -179,8 +208,9 @@ def profile_function(message):
         bot.edit_message_text(chat_id=message.chat.id, message_id=message.message_id, text=
 '╭────»»❀❀❀»»\n'\
 f'| 📋 Ваш профиль:\n'\
-f'| 👤 Имя - {db.info(message.chat.id)[1]}\n'\
-f'| 👩🏻‍❤️‍👨🏻 Партнер - {db.info(message.chat.id)[2]}\n'\
+f'| 👤 Имя - @{db.info(message.chat.id)[1]}\n'\
+f'| 🆔 Айди - {db.info(message.chat.id)[0]} \n'\
+f'| 👩🏻‍❤️‍👨🏻 Партнер - @{db.info(message.chat.id)[2]}\n'\
 '|───────────────\n'\
 '| 📌 Информация по питомцу:\n'\
 f'| 🐾 Питомец - {db.info_pet(db.info(message.chat.id)[1])[3]}\n'\
@@ -194,9 +224,10 @@ f'| 💦 Вода - {water_status}\n'\
         bot.edit_message_text(chat_id=message.chat.id, message_id=message.message_id, text=
 '╭────»»❀❀❀»»\n'\
 f'| 📋 Ваш профиль:\n'\
-f'| 👤 Имя - {db.info(message.chat.id)[1]}\n'\
+f'| 👤 Имя - @{db.info(message.chat.id)[1]}\n'\
+f'| 🆔 Айди - {db.info(message.chat.id)[0]} \n'\
 f'| 👩🏻‍❤️‍👨🏻 Партнер - {db.info(message.chat.id)[2]}\n'\
 '╰────»»❀❀❀»»')
 
-bot.infinity_polling()
 print("bot started")
+bot.infinity_polling()

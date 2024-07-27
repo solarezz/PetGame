@@ -19,7 +19,7 @@ def request_partner_id(request_partner_id: int, user_id: int,):
     cursor.execute('UPDATE users SET request_partner_id = ? WHERE user_id = ?', (request_partner_id, user_id))
     connection.commit()
         
-def partner_update(user_id:int, partner_name: str, partner_id: int):
+def partner_update(user_id: int, partner_name: str, partner_id: int):
     cursor.execute('UPDATE users SET partner_id = ? WHERE user_id = ?', (partner_id, user_id))
     cursor.execute('UPDATE users SET partner = ? WHERE user_id = ?', (partner_name, user_id))
     connection.commit()
@@ -33,6 +33,16 @@ def info_pet(owner: str):
         result = cursor.fetchone()
     return result
 
+def delete_pet(owner: str):
+    cursor.execute("DELETE FROM pets WHERE owner1 = ?", (owner,))
+    deleted_rows = cursor.rowcount  # Получаем количество удаленных строк
+
+    # Если ничего не удалено, попробуем удалить записи со вторым владельцем
+    if deleted_rows == 0:
+        cursor.execute("DELETE FROM pets WHERE owner2 = ?", (owner,))
+
+    # Сохраняем изменения и закрываем соединение
+    connection.commit()
 
 def pet_update(owner1: str, owner2: str, pet: str):
     cursor.execute('INSERT INTO pets (owner1, owner2, pet) VALUES (?, ?, ?)', (owner1, owner2, pet))
