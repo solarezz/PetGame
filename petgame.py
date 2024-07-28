@@ -1,6 +1,8 @@
 import telebot
 from telebot import types
 import database as db
+import time
+from parser import seconds_to_hms
 
 API_TOKEN = '7006081046:AAFPbndJeFGBR4_tTQXHcItRZ0F4NJ4PsJw'
 
@@ -26,6 +28,7 @@ def welcome_message(message):
     button_pet = types.InlineKeyboardButton('🐾 Питомец', callback_data='pet')
     markup.row(button_profile, button_pet, button_partner)
     bot.reply_to(message, message_, reply_markup=markup)
+    print(time.time())
     try:
         db.table_input(user_id=message.chat.id, username=message.from_user.username)
     except:
@@ -67,6 +70,11 @@ def callback_handler(call):
             if db.info(call.message.chat.id)[3] == "None":
                 bot.send_message(call.message.chat.id, "❌ У вас нет партнёра!")
             elif db.info_pet(db.info(call.message.chat.id)[1])[3] != "Питомец не выбран":
+                markup = types.InlineKeyboardMarkup()
+                button_locate = types.InlineKeyboardButton('📤 Отправить питомца партнёру', callback_data='send_pet')
+                button_eat = types.InlineKeyboardButton('🍽️ Покормить питомца', callback_data='eat_pet')
+                button_water = types.InlineKeyboardButton('🥛 Попоить питомца', callback_data='water_pet')
+                markup.row(button_locate, button_eat, button_water)
                 health_status = "Отлично себя чувствует" if db.info_pet(db.info(call.message.chat.id)[1])[5] > 70 else "Плохо" if \
                 db.info_pet(db.info(call.message.chat.id)[1])[5] <= 30 else "Нормально"
                 eat_status = "Не голоден" if db.info_pet(db.info(call.message.chat.id)[1])[6] == 100 else "Голоден" if \
@@ -82,11 +90,18 @@ def callback_handler(call):
                 f'| 🩺 Здоровье -  {health_status}\n' \
                 f'| 🍽️ Еда - {eat_status}\n' \
                 f'| 💦 Вода - {water_status}\n' \
-                '╰────»»❀❀❀»»')
+                '╰────»»❀❀❀»»', reply_markup=markup)
             else:
                 choice_pet(call.message)
         except TypeError:
             choice_pet(call.message)
+    elif call.data == 'send_pet':
+        if db.info_pet(db.info(call.message.chat.id)[1])[2] != db.info(call.message.chat.id)[1]:
+            bot.send_message(call.message.chat.id, "🚫 Питомец не у Вас!")
+        elif db.info_pet(db.info(call.message.chat.id)[1])[8] > 0:
+            bot.send_message(call.message.chat.id, "🚫 Питомец уже находится в пути!")
+        else:
+            transfer_pet(db.info(call.message.chat.id)[1])
     elif call.data == 'yes_partner':
         profile_partner(call.message)
     elif call.data == 'no_partner':
@@ -136,31 +151,57 @@ def callback_handler(call):
         bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🦜 Попугай". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
     elif call.data == 'yesdog':
         db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐶 Собака")
+        db.update_locate(owner=db.info(call.message.chat.id)[1])
         bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
     elif call.data == 'yescat':
         db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐱 Кот")
+        db.update_locate(owner=db.info(call.message.chat.id)[1])
         bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
     elif call.data == 'yesbelka':
         db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐿️ Белка")
+        db.update_locate(owner=db.info(call.message.chat.id)[1])
         bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
     elif call.data == 'yeshamster':
         db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐹 Хомяк")
+        db.update_locate(owner=db.info(call.message.chat.id)[1])
         bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
     elif call.data == 'yesturtle':
         db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐢 Черепаха")
+        db.update_locate(owner=db.info(call.message.chat.id)[1])
         bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
     elif call.data == 'yesparrot':
         db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🦜 Попугай")
+        db.update_locate(owner=db.info(call.message.chat.id)[1])
         bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
     elif call.data == 'notapprove':
         bot.send_message(db.info(call.message.chat.id)[3], "❌ Ваш партнёр не одобрил Ваш выбор.")
-    
+
+def transfer_pet(usernametg):
+    locate_time = 15
+    db.update_timelocate(usernametg, locate_time)
+    if locate_time != 0:
+        transfer_message(chatid=db.info_username(usernametg)[0], username=usernametg)
+        while locate_time > 0:
+            locate_time -= 1
+            db.update_timelocate(owner=usernametg, locate_time=locate_time)
+            time.sleep(1)
+        finish_transfer_message(db.info_username(usernametg)[3])
+
+def finish_transfer_message(chatid):
+    db.update_locate(db.info(chatid)[1])
+    bot.send_message(chatid, f"Питомец прибыл к Вам")
+
+def transfer_message(chatid, username):
+    bot.send_message(chatid, f"Ваш питомец прибудет к партнёру через - {seconds_to_hms(db.info_pet(db.info_username(username)[1])[8])}")
+    bot.send_message(db.info_username(username)[3], f"Питомец прибудет к Вам через - {seconds_to_hms(db.info_pet(db.info_username(username)[1])[8])}")
+    #threading.Thread(target=transfer_pet, args=(username,), daemon=True).start()
+
 def choice_pet(message):
     markup = types.InlineKeyboardMarkup()
     button_dog = types.InlineKeyboardButton('🐶 Собака', callback_data='dog')
@@ -202,6 +243,11 @@ def profile_partner(message):
 
 def profile_function(message):
     try:
+        markup = types.InlineKeyboardMarkup()
+        button_locate = types.InlineKeyboardButton('📤 Отправить питомца партнёру', callback_data='send_pet')
+        button_eat = types.InlineKeyboardButton('🍽️ Покормить питомца', callback_data='eat_pet')
+        button_water = types.InlineKeyboardButton('🥛 Попоить питомца', callback_data='water_pet')
+        markup.row(button_locate, button_eat, button_water)
         health_status = "Отлично себя чувствует" if db.info_pet(db.info(message.chat.id)[1])[5] > 70 else "Плохо" if db.info_pet(db.info(message.chat.id)[1])[5] <= 30 else "Нормально"
         eat_status = "Не голоден" if db.info_pet(db.info(message.chat.id)[1])[6] == 100 else "Голоден" if db.info_pet(db.info(message.chat.id)[1])[6] <= 30 else "Нормально"
         water_status = "Не хочет пить" if db.info_pet(db.info(message.chat.id)[1])[7] == 100 else "Хочет пить" if db.info_pet(db.info(message.chat.id)[1])[7] <= 30 else "Нормально"
@@ -219,7 +265,7 @@ f'| 🌍 Месторасположение - {db.info_pet(db.info(message.chat.
 f'| 🩺 Здоровье -  {health_status}\n'\
 f'| 🍽️ Еда - {eat_status}\n'\
 f'| 💦 Вода - {water_status}\n'\
-'╰────»»❀❀❀»»')
+'╰────»»❀❀❀»»', reply_markup=markup)
     except:
         bot.edit_message_text(chat_id=message.chat.id, message_id=message.message_id, text=
 '╭────»»❀❀❀»»\n'\
@@ -228,6 +274,7 @@ f'| 👤 Имя - @{db.info(message.chat.id)[1]}\n'\
 f'| 🆔 Айди - {db.info(message.chat.id)[0]} \n'\
 f'| 👩🏻‍❤️‍👨🏻 Партнер - {db.info(message.chat.id)[2]}\n'\
 '╰────»»❀❀❀»»')
+
 
 print("bot started")
 bot.infinity_polling()

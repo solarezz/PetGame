@@ -14,6 +14,11 @@ def info(user_id: int):
     cursor.execute('SELECT * FROM users WHERE user_id == ?', (user_id,))
     result = cursor.fetchone()
     return result
+
+def info_username(username: str):
+    cursor.execute('SELECT * FROM users WHERE username == ?', (username, ))
+    result = cursor.fetchone()
+    return result
     
 def request_partner_id(request_partner_id: int, user_id: int,):
     cursor.execute('UPDATE users SET request_partner_id = ? WHERE user_id = ?', (request_partner_id, user_id))
@@ -26,10 +31,10 @@ def partner_update(user_id: int, partner_name: str, partner_id: int):
     
 #------------------#PETS DATABASE#------------------#------------------
 def info_pet(owner: str):
-    cursor.execute('SELECT * FROM pets WHERE owner1 = ?', (owner,))
+    cursor.execute('SELECT * FROM pets WHERE owner1 == ?', (owner,))
     result = cursor.fetchone()
     if result is None:
-        cursor.execute('SELECT * FROM pets WHERE owner2 = ?', (owner,))
+        cursor.execute('SELECT * FROM pets WHERE owner2 == ?', (owner,))
         result = cursor.fetchone()
     return result
 
@@ -49,10 +54,22 @@ def pet_update(owner1: str, owner2: str, pet: str):
     connection.commit()
     
 def update_petname(owner: str, petname: str):
-    try:
-        cursor.execute('UPDATE pets SET pet_name = ? WHERE owner1 = ?', (petname, owner))
-        connection.commit()
-    except:
+    cursor.execute('UPDATE pets SET pet_name = ? WHERE owner1 = ?', (petname, owner))
+    connection.commit()
+    if cursor.rowcount == 0:
         cursor.execute('UPDATE pets SET pet_name = ? WHERE owner2 = ?', (petname, owner))
         connection.commit()
-        
+
+def update_locate(owner: str):
+    cursor.execute('UPDATE pets SET locate = ? WHERE owner1 = ?', (owner, owner))
+    connection.commit()
+    if cursor.rowcount == 0:
+        cursor.execute('UPDATE pets SET locate = ? WHERE owner2 = ?', (owner, owner))
+        connection.commit()
+
+def update_timelocate(owner: str, locate_time: int):
+    cursor.execute('UPDATE pets SET locate_time = ? WHERE owner1 = ?', (locate_time, owner))
+    connection.commit()
+    if cursor.rowcount == 0:
+        cursor.execute('UPDATE pets SET locate_time = ? WHERE owner2 = ?', (locate_time, owner))
+        connection.commit()
