@@ -47,140 +47,141 @@ def handle_petname_input(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     bot.answer_callback_query(call.id)
-    if call.data == 'profile':
-        profile_function(call.message)
-    elif call.data == 'partner':
-        if db.info(call.message.chat.id)[3] != "None":
-            markup = types.InlineKeyboardMarkup()
-            button_partner = types.InlineKeyboardButton('💔 Расстаться', callback_data='breake')
-            button_pet = types.InlineKeyboardButton('🐾 Наш питомец', callback_data='pet')
-            markup.row(button_partner, button_pet)
-            bot.send_message(call.message.chat.id, f"📌 Информация по партнёру:\n❤️ Ваш партнёр: @{db.info(call.message.chat.id)[2]}", reply_markup=markup)
-        else:
-            bot.send_message(call.message.chat.id, "⌨️ Введите [ID] пользователя(его можно узнать в профиле): ")
-    elif call.data == 'breake':
-        bot.send_message(call.message.chat.id, "💔 Вы расстались с партнёром.")
-        bot.send_message(db.info(call.message.chat.id)[3], "💔 Ваш партнёр решил расстаться.")
-        #user_id: int, partner_name: str, partner_id: int
-        db.partner_update(db.info(call.message.chat.id)[3], "Партнёра нет", "None")
-        db.partner_update(call.message.chat.id, "Партнёра нет", "None")
-        db.delete_pet(db.info(call.message.chat.id)[1])
-    elif call.data == 'pet':
-        try:
-            if db.info(call.message.chat.id)[3] == "None":
-                bot.send_message(call.message.chat.id, "❌ У вас нет партнёра!")
-            elif db.info_pet(db.info(call.message.chat.id)[1])[3] != "Питомец не выбран":
+    match call.data:
+        case 'profile':
+            profile_function(call.message)
+        case 'partner':
+            if db.info(call.message.chat.id)[3] != "None":
                 markup = types.InlineKeyboardMarkup()
-                button_locate = types.InlineKeyboardButton('📤 Отправить питомца партнёру', callback_data='send_pet')
-                button_eat = types.InlineKeyboardButton('🍽️ Покормить питомца', callback_data='eat_pet')
-                button_water = types.InlineKeyboardButton('🥛 Попоить питомца', callback_data='water_pet')
-                markup.row(button_locate, button_eat, button_water)
-                health_status = "Отлично себя чувствует" if db.info_pet(db.info(call.message.chat.id)[1])[5] > 70 else "Плохо" if \
-                db.info_pet(db.info(call.message.chat.id)[1])[5] <= 30 else "Нормально"
-                eat_status = "Не голоден" if db.info_pet(db.info(call.message.chat.id)[1])[6] == 100 else "Голоден" if \
-                db.info_pet(db.info(call.message.chat.id)[1])[6] <= 30 else "Нормально"
-                water_status = "Не хочет пить" if db.info_pet(db.info(call.message.chat.id)[1])[7] == 100 else "Хочет пить" if \
-                db.info_pet(db.info(call.message.chat.id)[1])[7] <= 30 else "Нормально"
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=
-                '╭────»»❀❀❀»»\n'\
-                '| 📌 Информация по питомцу:\n' \
-                f'| 🐾 Питомец - {db.info_pet(db.info(call.message.chat.id)[1])[3]}\n' \
-                f'| 📸 Имя питомца - {db.info_pet(db.info(call.message.chat.id)[1])[4]}\n' \
-                f'| 🌍 Месторасположение - {db.info_pet(db.info(call.message.chat.id)[1])[2]}\n' \
-                f'| 🩺 Здоровье -  {health_status}\n' \
-                f'| 🍽️ Еда - {eat_status}\n' \
-                f'| 💦 Вода - {water_status}\n' \
-                '╰────»»❀❀❀»»', reply_markup=markup)
+                button_partner = types.InlineKeyboardButton('💔 Расстаться', callback_data='breake')
+                button_pet = types.InlineKeyboardButton('🐾 Наш питомец', callback_data='pet')
+                markup.row(button_partner, button_pet)
+                bot.send_message(call.message.chat.id, f"📌 Информация по партнёру:\n❤️ Ваш партнёр: @{db.info(call.message.chat.id)[2]}", reply_markup=markup)
             else:
+                bot.send_message(call.message.chat.id, "⌨️ Введите [ID] пользователя(его можно узнать в профиле): ")
+        case 'breake':
+            bot.send_message(call.message.chat.id, "💔 Вы расстались с партнёром.")
+            bot.send_message(db.info(call.message.chat.id)[3], "💔 Ваш партнёр решил расстаться.")
+            #user_id: int, partner_name: str, partner_id: int
+            db.partner_update(db.info(call.message.chat.id)[3], "Партнёра нет", "None")
+            db.partner_update(call.message.chat.id, "Партнёра нет", "None")
+            db.delete_pet(db.info(call.message.chat.id)[1])
+        case 'pet':
+            try:
+                if db.info(call.message.chat.id)[3] == "None":
+                    bot.send_message(call.message.chat.id, "❌ У вас нет партнёра!")
+                elif db.info_pet(db.info(call.message.chat.id)[1])[3] != "Питомец не выбран":
+                    markup = types.InlineKeyboardMarkup()
+                    button_locate = types.InlineKeyboardButton('📤 Отправить питомца партнёру', callback_data='send_pet')
+                    button_eat = types.InlineKeyboardButton('🍽️ Покормить питомца', callback_data='eat_pet')
+                    button_water = types.InlineKeyboardButton('🥛 Попоить питомца', callback_data='water_pet')
+                    markup.row(button_locate, button_eat, button_water)
+                    health_status = "Отлично себя чувствует" if db.info_pet(db.info(call.message.chat.id)[1])[5] > 70 else "Плохо" if \
+                    db.info_pet(db.info(call.message.chat.id)[1])[5] <= 30 else "Нормально"
+                    eat_status = "Не голоден" if db.info_pet(db.info(call.message.chat.id)[1])[6] == 100 else "Голоден" if \
+                    db.info_pet(db.info(call.message.chat.id)[1])[6] <= 30 else "Нормально"
+                    water_status = "Не хочет пить" if db.info_pet(db.info(call.message.chat.id)[1])[7] == 100 else "Хочет пить" if \
+                    db.info_pet(db.info(call.message.chat.id)[1])[7] <= 30 else "Нормально"
+                    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=
+                    '╭────»»❀❀❀»»\n'\
+                    '| 📌 Информация по питомцу:\n' \
+                    f'| 🐾 Питомец - {db.info_pet(db.info(call.message.chat.id)[1])[3]}\n' \
+                    f'| 📸 Имя питомца - {db.info_pet(db.info(call.message.chat.id)[1])[4]}\n' \
+                    f'| 🌍 Месторасположение - {db.info_pet(db.info(call.message.chat.id)[1])[2]}\n' \
+                    f'| 🩺 Здоровье -  {health_status}\n' \
+                    f'| 🍽️ Еда - {eat_status}\n' \
+                    f'| 💦 Вода - {water_status}\n' \
+                    '╰────»»❀❀❀»»', reply_markup=markup)
+                else:
+                    choice_pet(call.message)
+            except TypeError:
                 choice_pet(call.message)
-        except TypeError:
-            choice_pet(call.message)
-    elif call.data == 'send_pet':
-        if db.info_pet(db.info(call.message.chat.id)[1])[2] != db.info(call.message.chat.id)[1]:
-            bot.send_message(call.message.chat.id, "🚫 Питомец не у Вас!")
-        elif db.info_pet(db.info(call.message.chat.id)[1])[8] > 0:
-            bot.send_message(call.message.chat.id, "🚫 Питомец уже находится в пути!")
-        else:
-            transfer_pet(db.info(call.message.chat.id)[1])
-    elif call.data == 'yes_partner':
-        profile_partner(call.message)
-    elif call.data == 'no_partner':
-        bot.send_message(call.message.chat.id, '🚫 Вам отказали в партнерстве')
-        db.request_partner_id(0, call.message.chat.id)
-    elif call.data == 'dog':
-        markup = types.InlineKeyboardMarkup()
-        button_yesdog = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesdog')
-        button_nodog = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
-        markup.row(button_yesdog, button_nodog)
-        bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
-        bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐶 Собака". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
-    elif call.data == 'cat':
-        markup = types.InlineKeyboardMarkup()
-        button_yescat = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yescat')
-        button_nocat = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
-        markup.row(button_yescat, button_nocat)
-        bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
-        bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐱 Кот". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
-    elif call.data == 'squirrel':
-        markup = types.InlineKeyboardMarkup()
-        button_yesbelka = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesbelka')
-        button_nobelka = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
-        markup.row(button_yesbelka, button_nobelka)
-        bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
-        bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐿️ Белка". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
-    elif call.data == 'hamster':
-        markup = types.InlineKeyboardMarkup()
-        button_yeshamster = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yeshamster')
-        button_nohamster = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
-        markup.row(button_yeshamster, button_nohamster)
-        bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
-        bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐹 Хомяк". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
-    elif call.data == 'turtle':
-        markup = types.InlineKeyboardMarkup()
-        button_yesturtle = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesturtle')
-        button_noturtle = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
-        markup.row(button_yesturtle, button_noturtle)
-        bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
-        bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐢 Черепаха". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
-    elif call.data == 'parrot':
-        markup = types.InlineKeyboardMarkup()
-        button_yesparrot = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesparrot')
-        button_noparrot = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
-        markup.row(button_yesparrot, button_noparrot)
-        bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
-        bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🦜 Попугай". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
-    elif call.data == 'yesdog':
-        db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐶 Собака")
-        db.update_locate(owner=db.info(call.message.chat.id)[1])
-        bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
-    elif call.data == 'yescat':
-        db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐱 Кот")
-        db.update_locate(owner=db.info(call.message.chat.id)[1])
-        bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
-    elif call.data == 'yesbelka':
-        db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐿️ Белка")
-        db.update_locate(owner=db.info(call.message.chat.id)[1])
-        bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
-    elif call.data == 'yeshamster':
-        db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐹 Хомяк")
-        db.update_locate(owner=db.info(call.message.chat.id)[1])
-        bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
-    elif call.data == 'yesturtle':
-        db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐢 Черепаха")
-        db.update_locate(owner=db.info(call.message.chat.id)[1])
-        bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
-    elif call.data == 'yesparrot':
-        db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🦜 Попугай")
-        db.update_locate(owner=db.info(call.message.chat.id)[1])
-        bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
-    elif call.data == 'notapprove':
-        bot.send_message(db.info(call.message.chat.id)[3], "❌ Ваш партнёр не одобрил Ваш выбор.")
+        case 'send_pet':
+            if db.info_pet(db.info(call.message.chat.id)[1])[2] != db.info(call.message.chat.id)[1]:
+                bot.send_message(call.message.chat.id, "🚫 Питомец не у Вас!")
+            elif db.info_pet(db.info(call.message.chat.id)[1])[8] > 0:
+                bot.send_message(call.message.chat.id, "🚫 Питомец уже находится в пути!")
+            else:
+                transfer_pet(db.info(call.message.chat.id)[1])
+        case 'yes_partner':
+            profile_partner(call.message)
+        case 'no_partner':
+            bot.send_message(call.message.chat.id, '🚫 Вам отказали в партнерстве')
+            db.request_partner_id(0, call.message.chat.id)
+        case 'dog':
+            markup = types.InlineKeyboardMarkup()
+            button_yesdog = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesdog')
+            button_nodog = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
+            markup.row(button_yesdog, button_nodog)
+            bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
+            bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐶 Собака". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
+        case 'cat':
+            markup = types.InlineKeyboardMarkup()
+            button_yescat = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yescat')
+            button_nocat = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
+            markup.row(button_yescat, button_nocat)
+            bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
+            bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐱 Кот". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
+        case 'squirrel':
+            markup = types.InlineKeyboardMarkup()
+            button_yesbelka = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesbelka')
+            button_nobelka = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
+            markup.row(button_yesbelka, button_nobelka)
+            bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
+            bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐿️ Белка". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
+        case 'hamster':
+            markup = types.InlineKeyboardMarkup()
+            button_yeshamster = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yeshamster')
+            button_nohamster = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
+            markup.row(button_yeshamster, button_nohamster)
+            bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
+            bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐹 Хомяк". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
+        case 'turtle':
+            markup = types.InlineKeyboardMarkup()
+            button_yesturtle = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesturtle')
+            button_noturtle = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
+            markup.row(button_yesturtle, button_noturtle)
+            bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
+            bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🐢 Черепаха". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
+        case 'parrot':
+            markup = types.InlineKeyboardMarkup()
+            button_yesparrot = types.InlineKeyboardButton('✔️ Одобряю', callback_data='yesparrot')
+            button_noparrot = types.InlineKeyboardButton('❌ Не одобряю', callback_data='notapprove')
+            markup.row(button_yesparrot, button_noparrot)
+            bot.send_message(call.message.chat.id, '⚠️ Ваш партнёр должен одобрить Ваш выбор. Ожидаем одобрения...')
+            bot.send_message(db.info(call.message.chat.id)[3], '⚠️ Ваш партнёр выбрал питомца "🦜 Попугай". Нажмите на кнопку в связи с вашим решением.', reply_markup=markup)
+        case 'yesdog':
+            db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐶 Собака")
+            db.update_locate(owner=db.info(call.message.chat.id)[1])
+            bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
+        case 'yescat':
+            db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐱 Кот")
+            db.update_locate(owner=db.info(call.message.chat.id)[1])
+            bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
+        case 'yesbelka':
+            db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐿️ Белка")
+            db.update_locate(owner=db.info(call.message.chat.id)[1])
+            bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
+        case 'yeshamster':
+            db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐹 Хомяк")
+            db.update_locate(owner=db.info(call.message.chat.id)[1])
+            bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
+        case 'yesturtle':
+            db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🐢 Черепаха")
+            db.update_locate(owner=db.info(call.message.chat.id)[1])
+            bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
+        case 'yesparrot':
+            db.pet_update(owner1=db.info(call.message.chat.id)[1], owner2=db.info(call.message.chat.id)[2], pet="🦜 Попугай")
+            db.update_locate(owner=db.info(call.message.chat.id)[1])
+            bot.send_message(db.info(call.message.chat.id)[3], f'👩🏻‍❤️‍👨🏻 Партнёр одобрил Ваш выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.')
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text=f'👩🏻‍❤️‍👨🏻 Вы одобрили выбор. Теперь у вас есть питомец {db.info_pet(db.info(call.message.chat.id)[1])[3]}.\n\nТеперь напишите имя питомца, перед тем как написать обязательно хорошо посоветуйтесь с партнёром! Имя:')
+        case 'notapprove':
+            bot.send_message(db.info(call.message.chat.id)[3], "❌ Ваш партнёр не одобрил Ваш выбор.")
 
 def transfer_pet(usernametg):
     locate_time = 15
