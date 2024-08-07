@@ -4,7 +4,7 @@ import database as db
 import time
 from parser import seconds_to_hms
 
-API_TOKEN = '7006081046:AAFPbndJeFGBR4_tTQXHcItRZ0F4NJ4PsJw'
+API_TOKEN = ''
 
 bot = telebot.TeleBot(API_TOKEN)
 
